@@ -38,10 +38,8 @@ public class Editor {
 
 	// Variables Swing
 	private JFrame frame;
-	private JTextField textField;
 	private JScrollPane cartesScroll;
 	private JScrollPane deckScroll;
-	private JLabel lblNomBaralla;
 	private static JLabel valueLabel;
 
 	// Variables con listeners
@@ -121,7 +119,7 @@ public class Editor {
 		toCartas = new JButton("<---");
 		toCartas.setBackground(UIManager.getColor("CheckBox.light"));
 		toCartas.setFont(new Font("Tahoma", Font.BOLD | Font.ITALIC, 18));
-		toCartas.setBounds(323, 232, 127, 41);
+		toCartas.setBounds(323, 208, 127, 41);
 		toCartas.setContentAreaFilled(false);
 		toCartas.setFocusPainted(false);
 		toCartas.setBorder(new EmptyBorder(1, 1, 1, 1));
@@ -129,21 +127,11 @@ public class Editor {
 
 		toDeck = new JButton("--->");
 		toDeck.setFont(new Font("Tahoma", Font.BOLD | Font.ITALIC, 18));
-		toDeck.setBounds(323, 297, 127, 41);
+		toDeck.setBounds(323, 290, 127, 41);
 		toDeck.setContentAreaFilled(false);
 		toDeck.setFocusPainted(false);
 		toDeck.setBorder(new EmptyBorder(1, 1, 1, 1));
 		panel.add(toDeck);
-
-		lblNomBaralla = new JLabel("Nom Baralla:");
-		lblNomBaralla.setFont(new Font("Tahoma", Font.BOLD, 14));
-		lblNomBaralla.setBounds(270, 99, 113, 20);
-		panel.add(lblNomBaralla);
-
-		textField = new JTextField();
-		textField.setBounds(371, 101, 135, 20);
-		panel.add(textField);
-		textField.setColumns(10);
 
 		JButton btnNewButton = new JButton("Carregar cartes");
 		btnNewButton.setFont(new Font("Tahoma", Font.BOLD | Font.ITALIC, 20));
@@ -173,7 +161,7 @@ public class Editor {
 		btnRandomDeck.setContentAreaFilled(false);
 		btnRandomDeck.setFocusPainted(false);
 		btnRandomDeck.setBorder(new EmptyBorder(1, 1, 1, 1));
-		btnRandomDeck.setBounds(301, 182, 198, 34);
+		btnRandomDeck.setBounds(290, 125, 198, 34);
 
 		panel.add(btnRandomDeck);
 
@@ -200,15 +188,20 @@ public class Editor {
 
 		// Action Listeners
 		btnGuardarBaralla.addActionListener(new ActionListener() {
-			
+
 			public void actionPerformed(ActionEvent e) {
-				String nom = textField.getText();
-				if (!nom.equals("")) {
-					controller.guardarDeck(deckArray, nom);
+				if (controller.isCartasCargadas() || controller.isDeckCargado()) {
+					String nom = JOptionPane.showInputDialog(null, "Nom de la Baralla",
+							"Introdueix el nom de la baralla a guardar", 1);
+					if (!nom.equals("") && nom != null) {
+						controller.guardarDeck(deckArray, nom);
+					} else {
+						showError("El camp nom no pot estar buit");
+					}
+
 				}else {
-					showError("El camp nom no pot estar buit");
+					showError("No heu carregat la colecio o cap baralla");
 				}
-				
 			}
 		});
 		btnRandomDeck.addActionListener(new ActionListener() {
@@ -222,7 +215,7 @@ public class Editor {
 						if (opcion == JOptionPane.YES_OPTION) {
 							controller.randomDeck(deckArray);
 							actualizarValorDeck();
-						} else if (opcion == JOptionPane.NO_OPTION){
+						} else if (opcion == JOptionPane.NO_OPTION) {
 							controller.randomDeck();
 							actualizarValorDeck();
 						}
@@ -243,7 +236,7 @@ public class Editor {
 				}
 
 				else {
-					showError("No has cargado ninguna baraja o cartas");
+					showError("No has carregat cap baralla o coleccio de cartes");
 				}
 			}
 		});
@@ -263,9 +256,10 @@ public class Editor {
 			public void actionPerformed(ActionEvent e) {
 				String name = JOptionPane.showInputDialog(null, "Nom de la Baralla",
 						"Introdueix el nom de la baralla a cercar", 1);
-				if (name != null) {
+				if (name != null && !name.equals("")) {
 					controller.setDeckCargado(true);
 					controller.obtenirBaralla(name);
+					actualizarValorDeck();
 				}
 			}
 		});
