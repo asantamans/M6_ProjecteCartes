@@ -251,6 +251,8 @@ public class Editor {
 
 				controller.cargarCardList();
 				controller.setCartasCargadas(true);
+				controller.setDeckValue(0);
+				actualizarValorDeck();
 				cargarCardListInJList();
 				
 			}
@@ -265,7 +267,7 @@ public class Editor {
 					controller.setDeckCargado(true);
 					controller.obtenirBaralla(name);
 					actualizarValorDeck();
-					controller.setDeckValue(controller.getBarallaCargada().getDeckValue());
+				//	controller.setDeckValue(controller.getBarallaCargada().getDeckValue());
 				}
 			}
 		});
@@ -353,7 +355,7 @@ public class Editor {
 		}
 	}
 
-	private void cargarCardListInJList() {
+	public static void cargarCardListInJList() {
 		// carregarCartes();
 		cartesDLM.clear();
 		deckDLM.clear();

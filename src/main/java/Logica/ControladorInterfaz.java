@@ -236,7 +236,12 @@ public class ControladorInterfaz {
 		Baralla a = new Baralla(nom, getDeckValue(), llistaDeck);
 		if (barallaMongoDB.guardarBaralla(a)) {
 			Editor.showError("S'ha guardat la baralla satisfactoriament");
-			// Reutilitzem la funcio de editor, tot i que no sigui un error esplicitament
+			cargarCardList();
+			Editor.actualizarValorDeck();
+			Editor.cargarCardListInJList();
+			setDeckValue(0);
+			Editor.actualizarValorDeck();
+			// Reutilitzem la funcio de editor, tot i que no sigui un error exlicitament
 		} else {
 			Editor.showError("Error: La baralla " + nom + " ja existex");
 		}
