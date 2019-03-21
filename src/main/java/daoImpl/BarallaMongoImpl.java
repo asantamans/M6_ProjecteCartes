@@ -31,6 +31,14 @@ public class BarallaMongoImpl implements IBaralla {
 		//Empty
 		//Fem servir els metodes per obrir i tancar conexio tota l'estona
 	}
+	private void protocolConect() {
+		obrirConect();
+		conectar();
+	}
+	private void protocolDesconect() {
+		desconectar();
+		tancarConect();
+	}
 	
 	//Metodes per conectar i desconectar BBDD Mongo
 	private void obrirConect() {
@@ -57,10 +65,9 @@ public class BarallaMongoImpl implements IBaralla {
 	//Metodes IBaralla
 
 	public boolean guardarBaralla(Baralla b1) {
-		obrirConect();
-		conectar();
+		protocolConect();
 		BasicDBObject searchQuery = new BasicDBObject();
-		searchQuery.put("name", b1.getDeckName());
+		searchQuery.put("deckName", b1.getDeckName());
 		DBCursor cursor = collection.find(searchQuery);
 		boolean transaccio = false;
 		if(cursor.size()==0) {
@@ -77,43 +84,17 @@ public class BarallaMongoImpl implements IBaralla {
 			transaccio= true;
 		}
 		
-		desconectar();
-		tancarConect();
+		protocolDesconect();
 		return transaccio;
 	}
 
-	public boolean actualitzarBaralla(Baralla b1) {
-		obrirConect();
-		conectar();
 
-		BasicDBObject searchQuery = new BasicDBObject();
-		searchQuery.put("name", b1.getDeckName());
-		DBCursor cursor = collection.find(searchQuery);
-
-		boolean transaccio = false;
-		if (cursor.size() != 0) {
-			DBObject obj = null;
-			try {
-				obj = (DBObject) JSON.parse(new ObjectMapper().writeValueAsString(b1));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			collection.insert(obj);
-		
-			transaccio = true;
-		}
-
-		desconectar();
-		tancarConect();
-		return transaccio;
-	}
 
 	public Baralla getDeckFromName(String nom) {
-		obrirConect();
-		conectar();
+		protocolConect();
 
 		BasicDBObject searchQuery = new BasicDBObject();
-		searchQuery.put("name", nom);
+		searchQuery.put("deckName", nom);
 		DBCursor cursor = collection.find(searchQuery);
 		Baralla searchDeck;
 		
@@ -124,8 +105,7 @@ public class BarallaMongoImpl implements IBaralla {
 			searchDeck = null;
 		}
 
-		desconectar();
-		tancarConect();
+		protocolDesconect();
 		return searchDeck;
 
 	}

@@ -17,6 +17,7 @@ public class ControladorInterfaz {
 	private CartaExistImpl cartaExistDB;
 	private BarallaMongoImpl barallaMongoDB;
 	private int deckValue = 0;
+	private Baralla cargada;
 
 	public ControladorInterfaz() {
 		cartasCargadas = false;
@@ -71,14 +72,7 @@ public class ControladorInterfaz {
 		Editor.cartesArray = listaCartasTMP;
 		Editor.deckArray = deckRandomBuild;
 		// Actualizamos los DefaultModelList
-		Editor.cartesDLM.clear();
-		Editor.deckDLM.clear();
-		for (Carta a : listaCartasTMP) {
-			Editor.cartesDLM.addElement(a);
-		}
-		for (Carta a : deckRandomBuild) {
-			Editor.deckDLM.addElement(a);
-		}
+		actualizarDLM();
 	}
 
 	public void randomDeck(ArrayList<Carta> mantener) {
@@ -140,26 +134,50 @@ public class ControladorInterfaz {
 			for (int i = 0; i < Editor.deckDLM.size(); ++i) {
 				Editor.deckDLM.removeElementAt(i);
 			}
+			actualizarDLM();
 
-			for (Carta a : Editor.cartesArray) {
-				Editor.cartesDLM.addElement(a);
-			}
-			for (Carta a : Editor.deckArray) {
-				Editor.deckDLM.addElement(a);
-			}
-			Editor.cartasList.setModel(Editor.cartesDLM);
-			Editor.deckList.setModel(Editor.deckDLM);
 		}
 	}
 
 	public void cargarCardList() {
 		cartaExistDB.getConexion().carregarCartes();
 		Editor.cartesArray = cartaExistDB.getConexion().obtenirCartes();
+		
 
+	}
+	private ArrayList<Carta> obtenirCardList() {
+		cartaExistDB.getConexion().carregarCartes();
+		return cartaExistDB.getConexion().obtenirCartes();
+		
+
+	}
+	private void actualizarDLM() {
+		Editor.cartesDLM.clear();
+		Editor.deckDLM.clear();
+		for (Carta a : Editor.cartesArray) {
+			Editor.cartesDLM.addElement(a);
+		}
+		for (Carta a : Editor.deckArray) {
+			Editor.deckDLM.addElement(a);
+		}
+		Editor.cartasList.setModel(Editor.cartesDLM);
+		Editor.deckList.setModel(Editor.deckDLM);
 	}
 
 	public int getDeckValue() {
 		return deckValue;
+	}
+	public void obtenirBaralla(String nom) {
+		barallaMongoDB = new BarallaMongoImpl();
+		Baralla cargada = barallaMongoDB.getDeckFromName(nom);
+		ArrayList<Carta> tmp = cargada.getLlistaDeCartes();
+		Editor.deckArray = tmp;
+		Editor.cartesArray = obtenirCardList();
+		//Eliminem les cartes del deck carregat de la llista de totes les cartes
+		for (Carta eliminar : Editor.deckArray) {
+			Editor.cartesArray.remove(eliminar);
+		}
+		actualizarDLM();
 	}
 
 	public void setDeckValue(int deckValue) {

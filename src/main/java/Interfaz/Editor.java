@@ -264,8 +264,8 @@ public class Editor {
 				String name = JOptionPane.showInputDialog(null, "Nom de la Baralla",
 						"Introdueix el nom de la baralla a cercar", 1);
 				if (name != null) {
-
-					cargarCardListInJList();
+					controller.setDeckCargado(true);
+					controller.obtenirBaralla(name);
 				}
 			}
 		});
