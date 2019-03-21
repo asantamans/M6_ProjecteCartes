@@ -191,15 +191,19 @@ public class Editor {
 
 			public void actionPerformed(ActionEvent e) {
 				if (controller.isCartasCargadas() || controller.isDeckCargado()) {
-					String nom = JOptionPane.showInputDialog(null, "Nom de la Baralla",
-							"Introdueix el nom de la baralla a guardar", 1);
-					if (!nom.equals("") && nom != null) {
-						controller.guardarDeck(deckArray, nom);
-					} else {
-						showError("El camp nom no pot estar buit");
+					if (deckArray.size() > 0) {
+						String nom = JOptionPane.showInputDialog(null, "Nom de la Baralla",
+								"Introdueix el nom de la baralla a guardar", 1);
+						if (!nom.equals("") && nom != null) {
+							controller.guardarDeck(deckArray, nom);
+						} else {
+							showError("El camp nom no pot estar buit");
+						}
+					}else {
+						showError("No heu afegit cap carta a la baralla");
 					}
 
-				}else {
+				} else {
 					showError("No heu carregat la colecio o cap baralla");
 				}
 			}
@@ -248,6 +252,7 @@ public class Editor {
 				controller.cargarCardList();
 				controller.setCartasCargadas(true);
 				cargarCardListInJList();
+				
 			}
 		});
 
@@ -260,6 +265,7 @@ public class Editor {
 					controller.setDeckCargado(true);
 					controller.obtenirBaralla(name);
 					actualizarValorDeck();
+					controller.setDeckValue(controller.getBarallaCargada().getDeckValue());
 				}
 			}
 		});

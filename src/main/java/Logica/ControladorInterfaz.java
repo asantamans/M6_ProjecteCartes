@@ -41,6 +41,10 @@ public class ControladorInterfaz {
 		this.deckCargado = deckCargado;
 	}
 
+	public Baralla getBarallaCargada() {
+		return cargada;
+	}
+
 	public void randomDeck() {
 		setDeckValue(0);
 		boolean end = false;
@@ -48,6 +52,8 @@ public class ControladorInterfaz {
 		ArrayList<Carta> listaCartasTMP = Editor.cartesArray;
 		ArrayList<Carta> posiblesCandidatos = new ArrayList<Carta>();
 		while (!end) {
+			// Una carta es candidata si el seu valor es <=(20 - [valor actual del deck en
+			// construccio])
 			posiblesCandidatos = new ArrayList<Carta>();
 			for (Carta a : listaCartasTMP) {
 				if (a.getValue() <= 20 - getDeckValue()) {
@@ -59,7 +65,17 @@ public class ControladorInterfaz {
 				// Obtenemos una carta aleatoria de todos los posibles candidatos
 				Random rand = new Random();
 				Carta tmp = posiblesCandidatos.get(rand.nextInt(posiblesCandidatos.size()));
-				// Eliminamos la carta de las proximas posibles cartas
+				// Eliminamos la carta de las proximas posibles cartas para que no pueda volver
+				// a ser candidata
+
+				/*
+				 * for (int i = 0; i < listaCartasTMP.size(); ++i) { Carta buscar =
+				 * listaCartasTMP.get(i); if (buscar.getName().equals(tmp.getName()) &&
+				 * buscar.getAttack() == tmp.getAttack() && buscar.getDefense() ==
+				 * tmp.getDefense() && buscar.getId() == tmp.getId() && buscar.getSummonCost()
+				 * == tmp.getSummonCost() && buscar.getSummonCost() == tmp.getSummonCost()) {
+				 * listaCartasTMP.remove(i); break; } }
+				 */
 				listaCartasTMP.remove(tmp);
 				deckRandomBuild.add(tmp);
 
@@ -79,7 +95,6 @@ public class ControladorInterfaz {
 	public void randomDeck(ArrayList<Carta> mantener) {
 		// Mismo metodo anterior de generacion de deck a excepcion de mantener las
 		// cartas de antes
-		setDeckValue(0);
 		boolean end = false;
 		ArrayList<Carta> deckRandomBuild = mantener;
 		ArrayList<Carta> listaCartasTMP = Editor.cartesArray;
@@ -104,6 +119,15 @@ public class ControladorInterfaz {
 					Random rand = new Random();
 					Carta tmp = posiblesCandidatos.get(rand.nextInt(posiblesCandidatos.size()));
 					// Eliminamos la carta de las proximas posibles cartas
+
+					/*
+					 * for (int i = 0; i < listaCartasTMP.size(); ++i) { Carta buscar =
+					 * listaCartasTMP.get(i); if (buscar.getName().equals(tmp.getName()) &&
+					 * buscar.getAttack() == tmp.getAttack() && buscar.getDefense() ==
+					 * tmp.getDefense() && buscar.getId() == tmp.getId() && buscar.getSummonCost()
+					 * == tmp.getSummonCost() && buscar.getSummonCost() == tmp.getSummonCost()) {
+					 * listaCartasTMP.remove(i); break; } }
+					 */
 					listaCartasTMP.remove(tmp);
 					deckRandomBuild.add(tmp);
 
@@ -116,10 +140,6 @@ public class ControladorInterfaz {
 				if (getDeckValue() >= 20) {
 					end = true;
 				}
-			}
-			System.out.println("\n\n\n\n\\nCartas random");
-			for (Carta tmp : deckRandomBuild) {
-				System.out.println(tmp.toString());
 			}
 
 			Editor.cartesArray = listaCartasTMP;
@@ -139,6 +159,7 @@ public class ControladorInterfaz {
 	public void cargarCardList() {
 		cartaExistDB.getConexion().carregarCartes();
 		Editor.cartesArray = cartaExistDB.getConexion().obtenirCartes();
+		Editor.deckArray = new ArrayList<Carta>();
 
 	}
 
@@ -171,25 +192,41 @@ public class ControladorInterfaz {
 		if (cargada != null) {
 			ArrayList<Carta> tmp = cargada.getLlistaDeCartes();
 			Editor.deckArray = tmp;
+			setDeckValue(tmp);
 			Editor.cartesArray = obtenirCardList();
-			// Eliminem les cartes del deck carregat de la llista de totes les cartes
+			// Eliminem les cartes del deck carregat de la llista de totes les cartes per
+			// evitar duplicats
 			for (Carta eliminar : Editor.deckArray) {
-				Editor.cartesArray.remove(eliminar);
+				eliminarDuplicados(eliminar);
+
 			}
 			actualizarDLM();
 			setDeckValue(tmp);
-		}else {
-			Editor.showError("No s'ha trobat la baralla "+nom);
+		} else {
+			Editor.showError("No s'ha trobat la baralla " + nom);
+		}
+	}
+
+	public void eliminarDuplicados(Carta buscar) {
+		for (int i = 0; i < Editor.cartesArray.size(); ++i) {
+			Carta tmp = Editor.cartesArray.get(i);
+			if (tmp.getName().equals(buscar.getName()) && tmp.getAttack() == buscar.getAttack()
+					&& tmp.getDefense() == buscar.getDefense() && tmp.getId() == buscar.getId()
+					&& tmp.getSummonCost() == buscar.getSummonCost() && tmp.getSummonCost() == buscar.getSummonCost()) {
+				Editor.cartesArray.remove(i);
+				break;
+			}
 		}
 	}
 
 	public void setDeckValue(ArrayList<Carta> cartes) {
 		int valor = 0;
-		for (Carta a: cartes) {
+		for (Carta a : cartes) {
 			valor += a.getValue();
 		}
 		setDeckValue(valor);
 	}
+
 	public void setDeckValue(int deckValue) {
 		this.deckValue = deckValue;
 	}
@@ -201,7 +238,7 @@ public class ControladorInterfaz {
 			Editor.showError("S'ha guardat la baralla satisfactoriament");
 			// Reutilitzem la funcio de editor, tot i que no sigui un error esplicitament
 		} else {
-			Editor.showError("Error: La baralla "+nom+ "ja existex");
+			Editor.showError("Error: La baralla " + nom + " ja existex");
 		}
 	}
 
