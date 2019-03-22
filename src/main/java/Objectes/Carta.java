@@ -2,7 +2,7 @@ package Objectes;
 
 public class Carta {
 	
-	//mantenim format variables tal format de xml
+	//Mantenim format variables tal format de xml
 	private int id;
 	private String name;
 	private int summonCost;

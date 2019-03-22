@@ -46,12 +46,18 @@ public class Editor {
 	public static JList<Carta> cartasList;
 	public static JList<Carta> deckList;
 
+	// Botones funcionales
 	private JButton btnRandomDeck;
 	private JButton toCartas;
 	private JButton toDeck;
 
-	public static ArrayList<Carta> cartesArray;
-	public static ArrayList<Carta> deckArray;
+	// Variables que representaran en tot moment les dades enmagatzemades de les dos
+	// llistes
+
+	public static ArrayList<Carta> cartesArray;// Representacio del contingut de la llista de colecio
+	public static ArrayList<Carta> deckArray;// Representacio del contingut de la llista de baralla en creacio
+
+	// Models de les llistes --> respaldades per cada arrayList
 	public static DefaultListModel<Carta> cartesDLM;
 	public static DefaultListModel<Carta> deckDLM;
 
@@ -84,7 +90,7 @@ public class Editor {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-
+		// Creacio apartat grafic i inicialitzacio variables de dades
 		controller = new ControladorInterfaz();
 		cartesArray = new ArrayList<Carta>();
 		deckArray = new ArrayList<Carta>();
@@ -190,6 +196,11 @@ public class Editor {
 		btnGuardarBaralla.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
+				/*
+				 * Guardem la baralla Nomes es podra guardar una baralla si : (Hi ha cartes
+				 * carregades de la colecio || Una baralla carregada) && la llista de baralla te
+				 * cartes && baralla te valor deck <= 20 i >= 0
+				 */
 				if (controller.isCartasCargadas() || controller.isDeckCargado()) {
 					if (deckArray.size() > 0) {
 						String nom = JOptionPane.showInputDialog(null, "Nom de la Baralla",
@@ -199,7 +210,9 @@ public class Editor {
 						} else {
 							showError("El camp nom no pot estar buit");
 						}
-					}else {
+					} else if (controller.getDeckValue() > 20) {
+						showError("No es pot desar una baralla que tingui un valor superior a 20");
+					} else {
 						showError("No heu afegit cap carta a la baralla");
 					}
 
@@ -211,7 +224,10 @@ public class Editor {
 		btnRandomDeck.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent arg0) {
-				// TODO Auto-generated method stub
+				/*
+				 * Creacio de baralles random amb posibilitat de mantenir cartes si te afegides
+				 * o generar una de nova a elecio del usuari
+				 */
 				if (controller.isCartasCargadas() || controller.isDeckCargado()) {
 					if (deckDLM.size() > 0 && controller.getDeckValue() <= 20) {
 						int opcion = JOptionPane.showConfirmDialog(null, "Has afegit cartes al deck, vols mantenirles?",
@@ -248,47 +264,71 @@ public class Editor {
 		btnNewButton.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-
+				// Carrega de la colecio de eXIst a la interfaz i les variables de
+				// enmagatzematge de dades corresponents
 				controller.cargarCardList();
 				controller.setCartasCargadas(true);
 				controller.setDeckValue(0);
 				actualizarValorDeck();
 				cargarCardListInJList();
-				
+
 			}
 		});
 
 		btnCarregarBaralla.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
+				/*
+				 * Carregar baralla Carrega la baralla sempre que el nom sigui difernt de "" i
+				 * no sigui null
+				 */
 				String name = JOptionPane.showInputDialog(null, "Nom de la Baralla",
 						"Introdueix el nom de la baralla a cercar", 1);
 				if (name != null && !name.equals("")) {
 					controller.setDeckCargado(true);
 					controller.obtenirBaralla(name);
 					actualizarValorDeck();
-				//	controller.setDeckValue(controller.getBarallaCargada().getDeckValue());
+					// controller.setDeckValue(controller.getBarallaCargada().getDeckValue());
+					// OBSOLETE
 				}
 			}
 		});
+
+		/*
+		 * Funcions per pasar de una llista a una altra el item seleccionat segons el
+		 * boto Tenen un funcionament exacte, excepte que una es inversa a la altre
+		 */
 		toDeck.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent arg0) {
 				// TODO Auto-generated method stub
+				// Verifiquem que hi hagi cartes carregades
 				if (controller.isCartasCargadas() || controller.isDeckCargado()) {
-					int point = cartasList.getSelectedIndex();
+					int point = cartasList.getSelectedIndex(); // Obtenim el punter del item seleccionat
 
 					if (point >= 0) {
-						Carta tmp = cartasList.getModel().getElementAt(point);
+						Carta tmp = cartasList.getModel().getElementAt(point); // Obtenim el objecte al que apunta el
+																				// punter
+						/*
+						 * Eliminem la carta de la llista del que extraiem el punter i l'afegim a
+						 * l'altre A la vegada, fem el mateix amb els ArrayList que reflexen les seves
+						 * dades enmagatzemades
+						 */
 						cartesArray.remove(tmp);
 						deckArray.add(tmp);
 						controller.setDeckValue(controller.getDeckValue() + tmp.getValue());
 						deckDLM.addElement(cartasList.getSelectedValue());
 						cartesDLM.remove(cartasList.getSelectedIndex());
+						// Actualitzem el valor del deck (ja que ha incrementat o disminuit)
 						actualizarValorDeck();
+						// Actualitzem els valors dels DefaultListModel que fan servir les llistes com a
+						// dades
 						Editor.cartasList.setModel(Editor.cartesDLM);
 						Editor.deckList.setModel(Editor.deckDLM);
 					}
+				} else {
+					// L'usuari no ha carregat cap baralla o coleccio
+					showError("No has cargado ninguna baraja o cartas");
 				}
 
 			}
@@ -338,6 +378,10 @@ public class Editor {
 	 * lblNomBaralla.setVisible(true); btnRandomDeck.setVisible(true); }
 	 */
 	public static void actualizarValorDeck() {
+		/*
+		 * Funcio per actualitzar el Valor de la interfaz amb el valor del deck (tenir
+		 * una representacio visual del valor de totes les cartes de la baralla
+		 */
 		valueLabel.setText("Valor baralla:" + controller.getDeckValue());
 		if (controller.getDeckValue() > 20) {
 			valueLabel.setForeground(Color.red);
@@ -347,6 +391,8 @@ public class Editor {
 	}
 
 	public static void actualizarValorDeck(int newValor) {
+		// Funcio igual al anterior, a excepcio que pasem el valor com a parametre en
+		// comtpes de agafarho del controlador
 		valueLabel.setText("Valor baralla:" + newValor);
 		if (controller.getDeckValue() > 20) {
 			valueLabel.setForeground(Color.red);
@@ -356,7 +402,13 @@ public class Editor {
 	}
 
 	public static void cargarCardListInJList() {
+		/*
+		 * Funcio inicial per a carregar les llistes amb el contingut extret de la bbdd
+		 * eXIst Nomes es crida al premer "Carregar colecio"
+		 */
+
 		// carregarCartes();
+		// Actualitzem els DLM que reflexen el que mostrem a les llistes
 		cartesDLM.clear();
 		deckDLM.clear();
 		for (Carta a : cartesArray) {
@@ -366,7 +418,8 @@ public class Editor {
 	}
 
 	public static void showError(String string) {
-		// TODO Auto-generated method stub
+		// Funcio per mostrar missatges per pantalla
+
 		JOptionPane.showMessageDialog(null, string, "Advertencia", 1);
 	}
 }

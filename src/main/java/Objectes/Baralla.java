@@ -5,9 +5,11 @@ import java.util.ArrayList;
 public class Baralla {
 	
 	//Mantenim el nom de les variables tal el format de mongo
-	private String deckName;
-	private int deckValue;
-	private ArrayList<Carta> llistaDeCartes;
+	private String deckName;//Nom de la baralla
+	private int deckValue; //deck Value = sumatori(deckValue dins de [llistadeCartes.Carta])
+	private ArrayList<Carta> llistaDeCartes; //Cartes de una baralla
+	
+	
 	public Baralla(String deckName, int deckValue, ArrayList<Carta> llistaDeCartes) {
 		super();
 		this.deckName = deckName;

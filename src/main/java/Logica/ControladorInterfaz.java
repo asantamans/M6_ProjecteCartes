@@ -13,12 +13,16 @@ import daoImpl.BarallaMongoImpl;
 import daoImpl.CartaExistImpl;
 
 public class ControladorInterfaz {
+	// Booleanos para controlar si las cartas han estado cargadas o hay un deck
+	// cargado
 	private boolean cartasCargadas;
 	private boolean deckCargado;
+	// Conectors a mongoDB i eXistDB
 	private CartaExistImpl cartaExistDB;
 	private BarallaMongoImpl barallaMongoDB;
-	private int deckValue = 0;
-	private Baralla cargada;
+
+	private int deckValue = 0; // Valor per representar en temps real el valor de la baralla en creacio
+	private Baralla cargada; // Null si no s'ha carregat cap baralla
 
 	public ControladorInterfaz() {
 		cartasCargadas = false;
@@ -76,6 +80,10 @@ public class ControladorInterfaz {
 				 * == tmp.getSummonCost() && buscar.getSummonCost() == tmp.getSummonCost()) {
 				 * listaCartasTMP.remove(i); break; } }
 				 */
+				/*
+				 * Removemos de posibles nuevos candidatos la carta que añadimos al nuevo random
+				 * Deck evitando duplicados
+				 **/
 				listaCartasTMP.remove(tmp);
 				deckRandomBuild.add(tmp);
 
@@ -94,7 +102,8 @@ public class ControladorInterfaz {
 
 	public void randomDeck(ArrayList<Carta> mantener) {
 		// Mismo metodo anterior de generacion de deck a excepcion de mantener las
-		// cartas de antes
+		// cartas de antes, solo se ejecuta esta en vez de la anterior si el usuario
+		// desea mantener las cartas (Siempre que haya cartas en deck)
 		boolean end = false;
 		ArrayList<Carta> deckRandomBuild = mantener;
 		ArrayList<Carta> listaCartasTMP = Editor.cartesArray;
@@ -157,19 +166,28 @@ public class ControladorInterfaz {
 	}
 
 	public void cargarCardList() {
+		// Cargamos las cartas de la bbdd
 		cartaExistDB.getConexion().carregarCartes();
+
+		// Actualizamos los arrays de editor que son el reflejo de las dos listas de la
+		// interfaz
 		Editor.cartesArray = cartaExistDB.getConexion().obtenirCartes();
 		Editor.deckArray = new ArrayList<Carta>();
 
 	}
 
 	private ArrayList<Carta> obtenirCardList() {
+
+		// Funcion que devuelve un ArrayList con todas las cartas de eXist
 		cartaExistDB.getConexion().carregarCartes();
 		return cartaExistDB.getConexion().obtenirCartes();
 
 	}
 
 	private void actualizarDLM() {
+		// Funció per actualitzar la informació de la interfaz a traves dels seus
+		// arrayList propis
+
 		Editor.cartesDLM.clear();
 		Editor.deckDLM.clear();
 		for (Carta a : Editor.cartesArray) {
@@ -183,33 +201,59 @@ public class ControladorInterfaz {
 	}
 
 	public int getDeckValue() {
+		/*
+		 * Funcio per obtenir el valor de les cartes de la llista que correspon a la
+		 * baralla en creació deckValue es un valor que reflexa de manera actualitzada
+		 * el valor de les cartes de la baralla en creacio
+		 * 
+		 */
 		return deckValue;
 	}
 
 	public void obtenirBaralla(String nom) {
+		/*
+		 * Funció que carrega una baralla de la bbdd de mongo segons el nom Si existeix;
+		 * ControladorInterfaz.Cargada = (la baralla carregada)
+		 * 
+		 */
 		barallaMongoDB = new BarallaMongoImpl();
-		Baralla cargada = barallaMongoDB.getDeckFromName(nom);
+		Baralla cargada = barallaMongoDB.getDeckFromName(nom);// Retornem la baralla
+
+		/*
+		 * Si la baralla existeix, el seu valor no sera null en cas contrari, si
+		 */
 		if (cargada != null) {
+			// Carreguem als arrayList de Editor les cartes de la baralla carregada
 			ArrayList<Carta> tmp = cargada.getLlistaDeCartes();
 			Editor.deckArray = tmp;
 			setDeckValue(tmp);
+			// Establim el valor del deck recontant el valor de totes les cartes; podriem
+			// utilitzar cargada.getDeckValue() amb altre funcio
 			Editor.cartesArray = obtenirCardList();
 			// Eliminem les cartes del deck carregat de la llista de totes les cartes per
-			// evitar duplicats
+			// evitar duplicats == buidem de la llista de cartes de coleccio les cartes de
+			// la baralla carregada
 			for (Carta eliminar : Editor.deckArray) {
 				eliminarDuplicados(eliminar);
 
 			}
-			actualizarDLM();
-			setDeckValue(tmp);
+			// Actualitzem l'apartat grafica
+			actualizarDLM();// Actualitzem les llistes de la interfaz per a que representin la nova baralla
+							// carregada i la colecio - [cartes baralla carregada]
+			setDeckValue(tmp);// Tornem a actualitzar el valor de Controlador per representarlo a la interfaz
 		} else {
 			Editor.showError("No s'ha trobat la baralla " + nom);
 		}
 	}
 
 	public void eliminarDuplicados(Carta buscar) {
+		/*
+		 * Funcio per cercar una carta en la llista de cartes de la coleccio i
+		 * eliminarla Nota: Implementada ja que avegades, ArrayList.remove(Object) falla
+		 */
 		for (int i = 0; i < Editor.cartesArray.size(); ++i) {
 			Carta tmp = Editor.cartesArray.get(i);
+			// Si tmp es exactament igual a buscar --> la elimina
 			if (tmp.getName().equals(buscar.getName()) && tmp.getAttack() == buscar.getAttack()
 					&& tmp.getDefense() == buscar.getDefense() && tmp.getId() == buscar.getId()
 					&& tmp.getSummonCost() == buscar.getSummonCost() && tmp.getSummonCost() == buscar.getSummonCost()) {
@@ -220,6 +264,10 @@ public class ControladorInterfaz {
 	}
 
 	public void setDeckValue(ArrayList<Carta> cartes) {
+		/*
+		 * FUncio que recorre el ArrayList cartes sumant el valor individual de cada
+		 * carta per actualitar el valor de la baralla o interfaz
+		 */
 		int valor = 0;
 		for (Carta a : cartes) {
 			valor += a.getValue();
@@ -232,17 +280,28 @@ public class ControladorInterfaz {
 	}
 
 	public void guardarDeck(ArrayList<Carta> llistaDeck, String nom) {
+
+		/*
+		 * Funcio que guarda un arrayList i un nom com a baralla Creem la baralla
+		 * mitjançant larrayList, el nom i valor de la baralla
+		 */
 		barallaMongoDB = new BarallaMongoImpl();
 		Baralla a = new Baralla(nom, getDeckValue(), llistaDeck);
+		// Si la baralla s'ha desat exitosament, actualitzem la interfaz buidant la
+		// llista de baralla i mostrem un missatge
 		if (barallaMongoDB.guardarBaralla(a)) {
 			Editor.showError("S'ha guardat la baralla satisfactoriament");
+			
+			//Funcions per actualitzar valors de baralla i llistes
 			cargarCardList();
 			Editor.actualizarValorDeck();
 			Editor.cargarCardListInJList();
 			setDeckValue(0);
 			Editor.actualizarValorDeck();
-			// Reutilitzem la funcio de editor, tot i que no sigui un error exlicitament
+		
 		} else {
+			// Reutilitzem la funcio de editor, tot i que no sigui un error exlicitament
+			//Per informar que la baralla amb nom introduit ja existeix a la bbdd
 			Editor.showError("Error: La baralla " + nom + " ja existex");
 		}
 	}

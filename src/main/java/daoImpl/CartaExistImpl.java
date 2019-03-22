@@ -44,41 +44,48 @@ public class CartaExistImpl implements ICarta {
 
 	private CartaExistImpl() {
 		conectar();
-		// carregarCartes();
+		// carregarCartes(); OLD:
 	}
 
 	private void conectar() {
 		try {
-
+			//http://webdam.inria.fr/Jorge/html/wdmch6.html
+			//https://exist-db.org/exist/apps/doc/devguide_xmldb
 			cExist = Class.forName(driver);
 			dbExist = (Database) cExist.newInstance();
-			dbExist.setProperty("create-database", "true");
+			dbExist.setProperty("create-database", "true"); 
 			DatabaseManager.registerDatabase(dbExist);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	private void desconectar() {
+		//Iniciem variables a null per tancar la conexió
 		cExist = null;
 		dbExist = null;
 	}
 
 	public void carregarCartes() {
 		try {
-			
+			/*Funcio que carrega tota la BBDD de Exist
+			 * 
+			 */
 			collection = DatabaseManager.getCollection(uri);
 			xmlResource = (XMLResource) collection.getResource(resourceName);
 			
+			//Obtenim totes les cartes enmagatzemadesm i les volquem en un arrayList
 			jsonObject = XML.toJSONObject((String) xmlResource.getContent());
-			JSONArray llistatCartesParseades = jsonObject.getJSONObject("cards").getJSONArray("card");
-			llistaCartes = new ArrayList<Carta>();
+			JSONArray llistatCartesParseades = jsonObject.getJSONObject("cards").getJSONArray("card");//array de cartes en format JSON
+			llistaCartes = new ArrayList<Carta>(); //Reiniciem/Iniciem l'arrayList  que contindra les cartes de la coleccio de cartes
 			
 			for (int i = 0; i < llistatCartesParseades.length(); i++) {
+				//Pasem una a una les cartes de format JSON a ArrayList<Carta>
 				Carta tmp = new Gson().fromJson(llistatCartesParseades.getJSONObject(i).toString(), Carta.class);
 				llistaCartes.add(tmp);
 			}
-			llistatCartesParseades = null;
+			llistatCartesParseades = null;//No seria necesari del tot estrictament
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -86,6 +93,7 @@ public class CartaExistImpl implements ICarta {
 
 	public ArrayList<Carta> obtenirCartes() {
 		// TODO Auto-generated method stub
+		//Retornem la llista de cartes carregades; previament han de estar carregades
 		return llistaCartes;
 	}
 	
