@@ -14,6 +14,10 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.util.JSON;
 
 import Objectes.Baralla;
@@ -21,28 +25,30 @@ import idao.IBaralla;
 
 public class BarallaMongoImpl implements IBaralla {
 
-	//http://mongodb.github.io/mongo-java-driver/3.4/driver/getting-started/quick-start/
+	// http://mongodb.github.io/mongo-java-driver/3.4/driver/getting-started/quick-start/
 	private MongoClientURI connectionString;
 	private MongoClient mongoClient;
-	private DB database;
-	private DBCollection collection;
+	private MongoDatabase database;
+	private MongoCollection<Document> collection;
 
 	public BarallaMongoImpl() {
-		//Empty
-		//Fem servir els metodes per obrir i tancar conexio tota l'estona
+		// Empty
+		// Fem servir els metodes per obrir i tancar conexio tota l'estona
 	}
+
 	private void protocolConect() {
 		obrirConect();
 		conectar();
 	}
+
 	private void protocolDesconect() {
 		desconectar();
 		tancarConect();
 	}
-	
-	//Metodes per conectar i desconectar BBDD Mongo
+
+	// Metodes per conectar i desconectar BBDD Mongo
 	private void obrirConect() {
-		connectionString = new MongoClientURI("mongodb://localhost:27017");//Segun COMPASS
+		connectionString = new MongoClientURI("mongodb://localhost:27017");// Segun COMPASS
 		mongoClient = new MongoClient(connectionString);
 	}
 
@@ -53,7 +59,7 @@ public class BarallaMongoImpl implements IBaralla {
 
 	// Creem dos metodes per a que les funcions puguin obrir i tancar la conexio
 	private void conectar() {
-		database = mongoClient.getDB("Projecte3");
+		database = mongoClient.getDatabase("Projecte3");
 		collection = database.getCollection("baralles");
 	}
 
@@ -61,54 +67,50 @@ public class BarallaMongoImpl implements IBaralla {
 		collection = null;
 		database = null;
 	}
-	
-	//Metodes IBaralla
+
+	// Metodes IBaralla
 
 	public boolean guardarBaralla(Baralla b1) {
 		protocolConect();
-		BasicDBObject searchQuery = new BasicDBObject();
-		searchQuery.put("deckName", b1.getDeckName());
-		DBCursor cursor = collection.find(searchQuery);
+
+		MongoCursor<Document> cursor = collection.find(Filters.eq("deckName", b1.getDeckName())).iterator();
+		ObjectMapper mapper = new ObjectMapper();
 		boolean transaccio = false;
-		if(cursor.size()==0) {
-			DBObject obj=null;
-			ObjectMapper mapper = new ObjectMapper();
+		if (!cursor.hasNext()) {
+			String barallaJson = null;
+			// String barallaJson = ""; Da problemas; mejor en null
 			try {
-				obj = (DBObject) JSON.parse(mapper.writeValueAsString(b1));
-				
+				barallaJson = mapper.writeValueAsString(b1);
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			collection.insert(obj);
-			
-			transaccio= true;
+			Document userDoc = Document.parse(barallaJson);
+			collection.insertOne(userDoc);
+
+			transaccio = true;
 		}
-		
+
 		protocolDesconect();
 		return transaccio;
 	}
 
-
-
 	public Baralla getDeckFromName(String nom) {
 		protocolConect();
 
-		BasicDBObject searchQuery = new BasicDBObject();
-		searchQuery.put("deckName", nom);
-		DBCursor cursor = collection.find(searchQuery);
-		Baralla searchDeck;
-		
+		MongoCursor<Document> cursor = collection.find(Filters.eq("deckName", nom)).iterator();
+		Baralla barallaBuscar;
+
 		try {
-			DBObject object = cursor.next();
-			searchDeck = new Gson().fromJson(object.toString(), Baralla.class);
+			Document document = cursor.next();
+			barallaBuscar = new Gson().fromJson(document.toJson(), Baralla.class);
 		} catch (NoSuchElementException e) {
-			searchDeck = null;
+			barallaBuscar = null;
 		}
 
 		protocolDesconect();
-		return searchDeck;
+		return barallaBuscar;
 
 	}
-	
 
 }
