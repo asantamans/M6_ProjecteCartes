@@ -203,12 +203,16 @@ public class Editor {
 				 */
 				if (controller.isCartasCargadas() || controller.isDeckCargado()) {
 					if (deckArray.size() > 0) {
-						String nom = JOptionPane.showInputDialog(null, "Nom de la Baralla",
-								"Introdueix el nom de la baralla a guardar", 1);
-						if (!nom.equals("") && nom != null) {
-							controller.guardarDeck(deckArray, nom);
+						if (controller.isDeckCargado()) {
+							controller.guardarDeck(deckArray, controller.getBarallaCargada().getDeckName());
 						} else {
-							showError("El camp nom no pot estar buit");
+							String nom = JOptionPane.showInputDialog(null, "Nom de la Baralla",
+									"Introdueix el nom de la baralla a guardar", 1);
+							if (!nom.equals("") && nom != null) {
+								controller.guardarDeck(deckArray, nom);
+							} else {
+								showError("El camp nom no pot estar buit");
+							}
 						}
 					} else if (controller.getDeckValue() > 20) {
 						showError("No es pot desar una baralla que tingui un valor superior a 20");
@@ -268,6 +272,7 @@ public class Editor {
 				// enmagatzematge de dades corresponents
 				controller.cargarCardList();
 				controller.setCartasCargadas(true);
+				controller.setDeckCargado(false);
 				controller.setDeckValue(0);
 				actualizarValorDeck();
 				cargarCardListInJList();

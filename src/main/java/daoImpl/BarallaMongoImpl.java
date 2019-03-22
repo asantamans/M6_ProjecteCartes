@@ -28,7 +28,7 @@ public class BarallaMongoImpl implements IBaralla {
 	// http://mongodb.github.io/mongo-java-driver/3.4/driver/getting-started/quick-start/
 	private MongoClientURI connectionString;
 	private MongoClient mongoClient;
-	private MongoDatabase database; //DBObject esta deprecated
+	private MongoDatabase database; // DBObject esta deprecated
 	private MongoCollection<Document> collection;
 
 	public BarallaMongoImpl() {
@@ -37,39 +37,39 @@ public class BarallaMongoImpl implements IBaralla {
 	}
 
 	private void protocolConect() {
-		//Funcio per evitar redundancia de aquestes dos funcions 
+		// Funcio per evitar redundancia de aquestes dos funcions
 		obrirConect();
 		conectar();
 	}
 
 	private void protocolDesconect() {
-		//Funcio per evitar redundancia de aquestes dos funcions 
+		// Funcio per evitar redundancia de aquestes dos funcions
 		desconectar();
 		tancarConect();
 	}
 
 	// Metodes per conectar i desconectar BBDD Mongo
 	private void obrirConect() {
-		//Iniciem les variables per obrir la conect amb  la nostra bbdd
+		// Iniciem les variables per obrir la conect amb la nostra bbdd
 		connectionString = new MongoClientURI("mongodb://localhost:27017");// Segun COMPASS
 		mongoClient = new MongoClient(connectionString);
 	}
 
 	private void tancarConect() {
-		//Tanquem les variables encarregades de obrir la conexió
+		// Tanquem les variables encarregades de obrir la conexió
 		mongoClient.close();
 		connectionString = null;
 	}
 
 	// Creem dos metodes per a que les funcions puguin obrir i tancar la conexio
 	private void conectar() {
-		//Establim la conexió amb mongo 
-		database = mongoClient.getDatabase("Projecte3");//Segons bbdd
-		collection = database.getCollection("baralles");//Segons la coleció
+		// Establim la conexió amb mongo
+		database = mongoClient.getDatabase("Projecte3");// Segons bbdd
+		collection = database.getCollection("baralles");// Segons la coleció
 	}
 
 	private void desconectar() {
-		//Posem a null la bbdd de mongo i colecip
+		// Posem a null la bbdd de mongo i colecip
 		collection = null;
 		database = null;
 	}
@@ -77,9 +77,10 @@ public class BarallaMongoImpl implements IBaralla {
 	// Metodes IBaralla
 
 	public boolean guardarBaralla(Baralla b1) {
-		/*Funcio per guardar la baralla b1
-		 *Primer buscarem la baralla a la bbdd ; Si existeix cursor == 1 o te hasNext
-		 *en cas contrari, la baralla no existeix; la inserim
+		/*
+		 * Funcio per guardar la baralla b1 Primer buscarem la baralla a la bbdd ; Si
+		 * existeix cursor == 1 o te hasNext en cas contrari, la baralla no existeix; la
+		 * inserim
 		 * 
 		 */
 		protocolConect();
@@ -91,27 +92,28 @@ public class BarallaMongoImpl implements IBaralla {
 			String barallaJson = null;
 			// String barallaJson = ""; Da problemas; mejor en null
 			try {
-				barallaJson = mapper.writeValueAsString(b1);//Passem el objecte a format Json
+				barallaJson = mapper.writeValueAsString(b1);// Passem el objecte a format Json
 
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			//Pasemla baralla en format JSON al document
+			// Pasemla baralla en format JSON al document
 			Document userDoc = Document.parse(barallaJson);
-			collection.insertOne(userDoc);//Insertem a la bbdd
+			collection.insertOne(userDoc);// Insertem a la bbdd
 
-			transaccio = true;//transacció satisfactoria
+			transaccio = true;// transacció satisfactoria
 		}
 
 		protocolDesconect();
-		return transaccio;//Retornarem true o false en funció si s'ha pogut o no insertar la baralla a la bbdd
+		return transaccio;// Retornarem true o false en funció si s'ha pogut o no insertar la baralla a la
+							// bbdd
 	}
 
 	public Baralla getDeckFromName(String nom) {
-		
-		/*Funció per buscar una baralla a la bbdd
-		 * Retornem la baralla si la trobem, en cas contrari
-		 * retorna una baralla = null;
+
+		/*
+		 * Funció per buscar una baralla a la bbdd Retornem la baralla si la trobem, en
+		 * cas contrari retorna una baralla = null;
 		 */
 		protocolConect();
 
@@ -128,6 +130,40 @@ public class BarallaMongoImpl implements IBaralla {
 		protocolDesconect();
 		return barallaBuscar;
 
+	}
+
+	public boolean actualitzarBaralla(Baralla b1) {
+	
+		/*
+		 * Funcio identica al guardar, excepte que fem un update de la baralla
+		 *que ens pasa l'usuari
+		 *Nomes es crida la funcio si la baralla ha estat cargada previament && modificada && manté el mateix nom 
+		 */
+		boolean transaccio = false;
+		protocolConect();
+
+		MongoCursor<Document> cursor = collection.find(Filters.eq("deckName", b1.getDeckName())).iterator();
+		//Mirem que la baralla existeixi --> HAURIA de existir sense problemes
+		ObjectMapper mapper = new ObjectMapper();
+		if (cursor.hasNext()) {
+			String barallaJson = null;
+			try {
+				//pasem la baralla a Json
+				barallaJson = mapper.writeValueAsString(b1);
+				//System.out.println(barallaJson);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+			//Remplacem la baralla per la update
+			Document userDoc = Document.parse(barallaJson);
+		    //System.out.println(Filters.eq("deckName", b1.getDeckName()));
+			collection.replaceOne(Filters.eq("deckName", b1.getDeckName()), userDoc);
+			//collection.updateOne(Filters.eq("deckName", b1.getDeckName()), userDoc); Invalid BSON arguments --> no actualiza
+			transaccio = true;
+		}
+
+		protocolDesconect();
+		return transaccio;
 	}
 
 }

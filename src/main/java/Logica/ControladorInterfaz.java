@@ -48,6 +48,15 @@ public class ControladorInterfaz {
 	public Baralla getBarallaCargada() {
 		return cargada;
 	}
+	
+
+	public Baralla getCargada() {
+		return cargada;
+	}
+
+	public void setCargada(Baralla cargada) {
+		this.cargada = cargada;
+	}
 
 	public void randomDeck() {
 		setDeckValue(0);
@@ -241,6 +250,7 @@ public class ControladorInterfaz {
 			actualizarDLM();// Actualitzem les llistes de la interfaz per a que representin la nova baralla
 							// carregada i la colecio - [cartes baralla carregada]
 			setDeckValue(tmp);// Tornem a actualitzar el valor de Controlador per representarlo a la interfaz
+			setCargada(cargada);
 		} else {
 			Editor.showError("No s'ha trobat la baralla " + nom);
 		}
@@ -287,22 +297,39 @@ public class ControladorInterfaz {
 		 */
 		barallaMongoDB = new BarallaMongoImpl();
 		Baralla a = new Baralla(nom, getDeckValue(), llistaDeck);
-		// Si la baralla s'ha desat exitosament, actualitzem la interfaz buidant la
-		// llista de baralla i mostrem un missatge
-		if (barallaMongoDB.guardarBaralla(a)) {
-			Editor.showError("S'ha guardat la baralla satisfactoriament");
-			
-			//Funcions per actualitzar valors de baralla i llistes
-			cargarCardList();
-			Editor.actualizarValorDeck();
-			Editor.cargarCardListInJList();
-			setDeckValue(0);
-			Editor.actualizarValorDeck();
-		
+		if (isDeckCargado() && cargada != null && (a.getDeckName().equals(cargada.getDeckName()))) {
+			if(barallaMongoDB.actualitzarBaralla(a)) {
+				Editor.showError("S'ha actualitzat la baralla satisfactoriament");
+
+				// Funcions per actualitzar valors de baralla i llistes
+				cargarCardList();
+				Editor.actualizarValorDeck();
+				Editor.cargarCardListInJList();
+				setDeckValue(0);
+				Editor.actualizarValorDeck();
+				cargada = null;
+			}else {
+				Editor.showError("Error: La baralla " + nom + " no s'ha pogut actualitzar");
+			}
 		} else {
-			// Reutilitzem la funcio de editor, tot i que no sigui un error exlicitament
-			//Per informar que la baralla amb nom introduit ja existeix a la bbdd
-			Editor.showError("Error: La baralla " + nom + " ja existex");
+			// Si la baralla s'ha desat exitosament, actualitzem la interfaz buidant la
+			// llista de baralla i mostrem un missatge
+			if (barallaMongoDB.guardarBaralla(a)) {
+				Editor.showError("S'ha guardat la baralla satisfactoriament");
+
+				// Funcions per actualitzar valors de baralla i llistes
+				cargarCardList();
+				Editor.actualizarValorDeck();
+				Editor.cargarCardListInJList();
+				setDeckValue(0);
+				Editor.actualizarValorDeck();
+				cargada = null;
+
+			} else {
+				// Reutilitzem la funcio de editor, tot i que no sigui un error exlicitament
+				// Per informar que la baralla amb nom introduit ja existeix a la bbdd
+				Editor.showError("Error: La baralla " + nom + " ja existex; editeula primer");
+			}
 		}
 	}
 
